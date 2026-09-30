@@ -17,7 +17,7 @@ concurrency:
 
 env:
   # ziroctl that builds and signs the catalog, pinned to a reviewed commit of ziro-os/ziro-os.
-  ZIROCTL_REF: 92c0f28b21ce7e1795044a4b3e88047cb48b29ec
+  ZIROCTL_REF: 2e170e0bfe202a92938dbac59df562acb71179e9
 
 jobs:
   build:
