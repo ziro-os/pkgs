@@ -1,0 +1,79 @@
+name: catalog
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 3 * * 1" # weekly re-sign: hosts refuse an index older than its 30-day expiry
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: catalog-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  # ziroctl that builds and signs the catalog, pinned to a reviewed commit of ziro-os/ziro-os.
+  ZIROCTL_REF: 92c0f28b21ce7e1795044a4b3e88047cb48b29ec
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          repository: ziro-os/ziro-os
+          ref: ${{ env.ZIROCTL_REF }}
+          path: .ziro-os
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version: "1.27.x"
+          cache-dependency-path: .ziro-os/tools/ziroctl/go.sum
+      - name: Build ziroctl
+        run: cd .ziro-os/tools/ziroctl && CGO_ENABLED=0 go build -o "$RUNNER_TEMP/ziroctl" .
+      - name: Validate manifests
+        run: |
+          "$RUNNER_TEMP/ziroctl" plugin validate modules/*/manifest.json examples/*/manifest.json
+          scripts/check-artifacts.sh
+      - name: Build catalog
+        run: |
+          "$RUNNER_TEMP/ziroctl" catalog build . --repo ziro --kind module --out public
+          for d in modules/*/; do
+            n=$(basename "$d")
+            find "$d" -maxdepth 1 -type f ! -name manifest.json | grep -q . || continue
+            mkdir -p "public/files/$n"
+            find "$d" -maxdepth 1 -type f ! -name manifest.json -exec cp {} "public/files/$n/" \;
+          done
+          cp catalog.pub public/
+      - name: Sign
+        if: github.event_name != 'pull_request'
+        env:
+          ZIRO_CATALOG_KEY: ${{ secrets.ZIRO_CATALOG_KEY }}
+        run: |
+          "$RUNNER_TEMP/ziroctl" catalog sign public
+          "$RUNNER_TEMP/ziroctl" catalog verify public --repo ziro --key catalog.pub
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
+        if: github.event_name != 'pull_request'
+        with:
+          path: public
+
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5

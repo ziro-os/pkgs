@@ -1,0 +1,51 @@
+{
+  "name": "hello-plugin",
+  "version": "0.1.0",
+  "description": "What hello-plugin does, in one line",
+  "packages": [
+    "busybox-extras"
+  ],
+  "settings": [
+    {
+      "name": "port",
+      "description": "listen port",
+      "default": "8080",
+      "pattern": "^[0-9]{2,5}$"
+    }
+  ],
+  "dirs": [
+    {
+      "path": "/var/lib/hello-plugin",
+      "mode": "0750",
+      "owner": "nobody:nobody"
+    }
+  ],
+  "files": [
+    {
+      "path": "/var/lib/hello-plugin/index.html",
+      "mode": "0644",
+      "content": "hello from hello-plugin\n"
+    }
+  ],
+  "services": [
+    {
+      "name": "hello-plugin",
+      "description": "hello-plugin daemon",
+      "exec": "/usr/sbin/httpd",
+      "args": "-f -p 127.0.0.1:{{setting.port}} -h /var/lib/hello-plugin",
+      "pidfile": "/run/ziro-hello-plugin.pid",
+      "logfile": "/var/log/hello-plugin.log",
+      "user": "nobody",
+      "autostart": false
+    }
+  ],
+  "health": {
+    "exec": "/usr/bin/wget",
+    "args": [
+      "-qO-",
+      "http://127.0.0.1:{{setting.port}}/"
+    ],
+    "timeout": "30s",
+    "expect": "hello"
+  }
+}

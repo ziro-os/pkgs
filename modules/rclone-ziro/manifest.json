@@ -1,0 +1,28 @@
+{
+  "name": "rclone-ziro",
+  "version": "1.0.0",
+  "description": "rclone: copy, sync and back up to S3, GCS, Azure Blob, B2, SFTP and more; enables `ziroctl backup --remote`",
+  "packages": [
+    "rclone"
+  ],
+  "dirs": [
+    {
+      "path": "/etc/ziro/rclone.d",
+      "mode": "0700"
+    }
+  ],
+  "files": [
+    {
+      "path": "/etc/ziro/rclone.conf",
+      "mode": "0600",
+      "content": "# Managed by `ziroctl plugin enable rclone-ziro`; add remotes with: rclone --config /etc/ziro/rclone.conf config\n"
+    }
+  ],
+  "health": {
+    "exec": "/usr/bin/rclone",
+    "args": [
+      "version"
+    ],
+    "expect": "rclone v"
+  }
+}

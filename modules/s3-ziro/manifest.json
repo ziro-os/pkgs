@@ -1,0 +1,109 @@
+{
+  "name": "s3-ziro",
+  "version": "1.0.0",
+  "description": "S3-compatible object storage (Garage) for backups, snapshots and apps; local-only by default",
+  "packages": [
+    "garage"
+  ],
+  "settings": [
+    {
+      "name": "capacity",
+      "description": "storage this node offers (e.g. 50G, 2T)",
+      "default": "10G",
+      "pattern": "^[0-9]{1,6}[MGT]$"
+    },
+    {
+      "name": "bind",
+      "description": "S3 API address; 0.0.0.0 exposes it (the host firewall still applies)",
+      "default": "127.0.0.1",
+      "pattern": "^(127\\.0\\.0\\.1|0\\.0\\.0\\.0|[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3})$"
+    },
+    {
+      "name": "port",
+      "description": "S3 API port",
+      "default": "3900",
+      "pattern": "^[1-9][0-9]{2,4}$"
+    }
+  ],
+  "secrets": {
+    "rpc_secret": "hex:32",
+    "admin_token": "base64:32",
+    "metrics_token": "base64:32",
+    "key_id": "hex:12",
+    "key_secret": "hex:32"
+  },
+  "artifacts": [
+    {
+      "url": "https://ziro-os.github.io/pkgs/files/s3-ziro/setup.sh",
+      "sha256": "5abec607d52134e0cebfcc9b5355fc6beeb97745ce2bc1942ce6a2bef8d4673f",
+      "path": "/var/lib/ziro/plugins/s3-ziro/setup.sh",
+      "mode": "0755"
+    }
+  ],
+  "dirs": [
+    {
+      "path": "/var/lib/garage",
+      "mode": "0750",
+      "owner": "garage:garage"
+    },
+    {
+      "path": "/var/lib/garage/meta",
+      "mode": "0750",
+      "owner": "garage:garage"
+    },
+    {
+      "path": "/var/lib/garage/data",
+      "mode": "0750",
+      "owner": "garage:garage"
+    },
+    {
+      "path": "/etc/ziro/rclone.d",
+      "mode": "0700"
+    }
+  ],
+  "files": [
+    {
+      "path": "/etc/garage/garage.toml",
+      "mode": "0640",
+      "owner": "root:garage",
+      "content": "# Managed by `ziroctl plugin enable s3-ziro`. Single node, RPC and admin API on loopback only.\nmetadata_dir = \"/var/lib/garage/meta\"\ndata_dir = \"/var/lib/garage/data\"\ndb_engine = \"sqlite\"\nmetadata_fsync = true\nreplication_factor = 1\ncompression_level = 1\nrpc_bind_addr = \"127.0.0.1:3901\"\nrpc_public_addr = \"127.0.0.1:3901\"\nrpc_secret = \"{{secret.rpc_secret}}\"\n\n[s3_api]\ns3_region = \"garage\"\napi_bind_addr = \"{{setting.bind}}:{{setting.port}}\"\nroot_domain = \".s3.ziro\"\n\n[admin]\napi_bind_addr = \"127.0.0.1:3903\"\nadmin_token = \"{{secret.admin_token}}\"\nmetrics_token = \"{{secret.metrics_token}}\"\n"
+    },
+    {
+      "path": "/etc/ziro/rclone.d/ziro-s3.env",
+      "mode": "0600",
+      "content": "# rclone remote ziro_s3 (used by `ziroctl backup create --remote ziro_s3:ziro-backups`).\nRCLONE_CONFIG_ZIRO_S3_TYPE=s3\nRCLONE_CONFIG_ZIRO_S3_PROVIDER=Other\nRCLONE_CONFIG_ZIRO_S3_ENDPOINT=http://127.0.0.1:{{setting.port}}\nRCLONE_CONFIG_ZIRO_S3_REGION=garage\nRCLONE_CONFIG_ZIRO_S3_FORCE_PATH_STYLE=true\nRCLONE_CONFIG_ZIRO_S3_ACCESS_KEY_ID=GK{{secret.key_id}}\nRCLONE_CONFIG_ZIRO_S3_SECRET_ACCESS_KEY={{secret.key_secret}}\n"
+    }
+  ],
+  "services": [
+    {
+      "name": "garage",
+      "description": "Garage S3 object storage",
+      "exec": "/usr/bin/garage",
+      "args": "-c /etc/garage/garage.toml server",
+      "user": "garage",
+      "pidfile": "/run/ziro-garage.pid",
+      "logfile": "/var/log/garage.log"
+    }
+  ],
+  "post_start": [
+    {
+      "exec": "/var/lib/ziro/plugins/s3-ziro/setup.sh",
+      "args": [
+        "{{setting.capacity}}"
+      ],
+      "timeout": "2m"
+    }
+  ],
+  "health": {
+    "exec": "/usr/bin/garage",
+    "args": [
+      "-c",
+      "/etc/garage/garage.toml",
+      "bucket",
+      "info",
+      "ziro-backups"
+    ],
+    "expect": "ziro-backups",
+    "timeout": "30s"
+  }
+}
