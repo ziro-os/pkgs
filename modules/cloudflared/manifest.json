@@ -1,0 +1,54 @@
+{
+  "name": "cloudflared",
+  "version": "2026.9.3",
+  "description": "Cloudflare Tunnel: publish services without a public IP, with optional Zero Trust Access (ziroctl cf)",
+  "settings": [
+    {
+      "name": "auto_update",
+      "description": "upgrade cloudflared daily to the version this catalog pins",
+      "default": "true",
+      "pattern": "^(true|false)$"
+    }
+  ],
+  "artifacts": [
+    {
+      "url": "https://github.com/cloudflare/cloudflared/releases/download/2026.9.3/cloudflared-linux-amd64",
+      "sha256": "77e26d8d900e0b8469f416239d14b5f296525fdf79fee6f511ef55609e3fbac2",
+      "path": "/var/lib/ziro/plugins/cloudflared/cloudflared",
+      "mode": "0755",
+      "arch": "x86_64"
+    },
+    {
+      "url": "https://github.com/cloudflare/cloudflared/releases/download/2026.9.3/cloudflared-linux-arm64",
+      "sha256": "aaeb2d7d0da3614634c7e03ab13487a1522c2e79165ed2929cfe23d5e95b326d",
+      "path": "/var/lib/ziro/plugins/cloudflared/cloudflared",
+      "mode": "0755",
+      "arch": "aarch64"
+    }
+  ],
+  "dirs": [
+    {
+      "path": "/etc/ziro/cloudflared",
+      "mode": "0700"
+    }
+  ],
+  "cron": [
+    "23 4 * * * /usr/bin/ziroctl cf update --cron"
+  ],
+  "stop": [
+    {
+      "exec": "/usr/bin/ziroctl",
+      "args": [
+        "cf",
+        "down"
+      ]
+    }
+  ],
+  "health": {
+    "exec": "/var/lib/ziro/plugins/cloudflared/cloudflared",
+    "args": [
+      "--version"
+    ],
+    "expect": "cloudflared version"
+  }
+}
