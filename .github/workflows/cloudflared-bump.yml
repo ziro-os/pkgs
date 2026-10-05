@@ -1,0 +1,65 @@
+name: cloudflared-bump
+
+# Daily: pin a new cloudflared release (sha256 checked against GitHub's digest and Cloudflare's
+# release notes, binary run), validate like the catalog job, push to main, then run the catalog job
+# to sign and publish. Hosts pick it up with `ziroctl cf update --cron`.
+# A push made with GITHUB_TOKEN doesn't trigger workflows, hence the explicit dispatch.
+
+on:
+  schedule:
+    - cron: "41 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflared-bump
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Pin the latest release
+        id: bump
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: echo "version=$(scripts/bump-cloudflared.sh)" >>"$GITHUB_OUTPUT"
+      - name: Read the pinned ziroctl ref
+        if: steps.bump.outputs.version != ''
+        id: ref
+        run: echo "ref=$(sed -n 's/^ *ZIROCTL_REF: *//p' .github/workflows/catalog.yml)" >>"$GITHUB_OUTPUT"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        if: steps.bump.outputs.version != ''
+        with:
+          repository: ziro-os/ziro-os
+          ref: ${{ steps.ref.outputs.ref }}
+          path: .ziro-os
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        if: steps.bump.outputs.version != ''
+        with:
+          go-version: "1.27.x"
+          cache-dependency-path: .ziro-os/tools/ziroctl/go.sum
+      - name: Validate
+        if: steps.bump.outputs.version != ''
+        run: |
+          (cd .ziro-os/tools/ziroctl && CGO_ENABLED=0 go build -o "$RUNNER_TEMP/ziroctl" .)
+          "$RUNNER_TEMP/ziroctl" plugin validate modules/*/manifest.json
+          scripts/check-artifacts.sh
+      - name: Push and publish
+        if: steps.bump.outputs.version != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.bump.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "cloudflared: $VERSION" -- modules/cloudflared/manifest.json
+          git push origin HEAD:main
+          gh workflow run catalog.yml --ref main
