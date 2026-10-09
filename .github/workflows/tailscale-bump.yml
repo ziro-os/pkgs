@@ -1,0 +1,98 @@
+name: tailscale-bump
+
+# Daily: pin the newest stable Tailscale release. Upstream ships a tarball holding both daemons and the module
+# framework can't unpack archives, so scripts/bump-tailscale.sh verifies the tarballs (stable series, a real
+# upstream tag, Tailscale's published sha256, static binaries of the right architecture, the amd64 pair run and
+# report the version) and stages the four single binaries. They are published as assets of a release of this
+# repository, the manifest pins each one's sha256, and the signed catalog carries the manifest. Hosts pick it up
+# with `ziroctl tailscale update --cron`. Any failed check stops before anything is published or pushed.
+# A push made with GITHUB_TOKEN doesn't trigger workflows, hence the explicit dispatch.
+
+on:
+  schedule:
+    - cron: "7 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tailscale-bump
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Pin the newest stable release
+        id: bump
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: echo "version=$(scripts/bump-tailscale.sh "$RUNNER_TEMP/tailscale")" >>"$GITHUB_OUTPUT"
+      - name: Read the pinned ziroctl ref
+        if: steps.bump.outputs.version != ''
+        id: ref
+        run: |
+          echo "ref=$(sed -n 's/^ *ZIROCTL_REF: *//p' .github/workflows/catalog.yml)" >>"$GITHUB_OUTPUT"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        if: steps.bump.outputs.version != ''
+        with:
+          repository: ziro-os/ziro-os
+          ref: ${{ steps.ref.outputs.ref }}
+          path: .ziro-os
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        if: steps.bump.outputs.version != ''
+        with:
+          go-version: "1.27.x"
+          cache-dependency-path: .ziro-os/tools/ziroctl/go.sum
+      - name: Validate
+        if: steps.bump.outputs.version != ''
+        run: |
+          (cd .ziro-os/tools/ziroctl && CGO_ENABLED=0 go build -o "$RUNNER_TEMP/ziroctl" .)
+          "$RUNNER_TEMP/ziroctl" plugin validate modules/*/manifest.json
+          scripts/check-artifacts.sh
+      - name: Publish the binaries
+        if: steps.bump.outputs.version != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.bump.outputs.version }}
+        run: |
+          tag="tailscale-$VERSION"
+          notes="Upstream Tailscale $VERSION binaries, unpacked from the official tarballs (sha256 checked against Tailscale's published checksum). The hashes pinned in modules/tailscale/manifest.json are the source of truth."
+          # The same files for the same version, so a retry after a partial run can safely overwrite.
+          gh release create "$tag" "$RUNNER_TEMP"/tailscale/* --target "$GITHUB_SHA" --title "Tailscale $VERSION" --notes "$notes" --latest=false ||
+            gh release upload "$tag" "$RUNNER_TEMP"/tailscale/* --clobber
+      - name: Check what hosts will download
+        if: steps.bump.outputs.version != ''
+        run: |
+          jq -r '.artifacts[] | "\(.url) \(.sha256)"' modules/tailscale/manifest.json | while read -r url sum; do
+            got=$(curl -fsSL --retry 5 --retry-delay 5 "$url" | sha256sum | cut -d' ' -f1)
+            [ "$got" = "$sum" ] || { echo "$url: published file hashes to $got, manifest pins $sum" >&2; exit 1; }
+            echo "ok $url"
+          done
+      - name: Push and publish
+        if: steps.bump.outputs.version != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.bump.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add modules/tailscale/manifest.json
+          git commit -m "tailscale: $VERSION"
+          git push origin HEAD:main
+          gh workflow run catalog.yml --ref main
+      - name: Prune old releases
+        if: steps.bump.outputs.version != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Keep the newest five: hosts holding an older (still unexpired) index can still fetch theirs.
+          gh release list --limit 100 --json tagName,createdAt \
+            --jq '[.[] | select(.tagName | startswith("tailscale-"))] | sort_by(.createdAt) | reverse | .[5:][] | .tagName' |
+            while read -r t; do gh release delete "$t" --yes --cleanup-tag; done
