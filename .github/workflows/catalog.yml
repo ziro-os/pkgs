@@ -40,8 +40,10 @@ jobs:
         run: cd .ziro-os/tools/ziroctl && CGO_ENABLED=0 go build -o "$RUNNER_TEMP/ziroctl" .
       - name: Validate manifests
         run: |
-          "$RUNNER_TEMP/ziroctl" plugin validate modules/*/manifest.json examples/*/manifest.json
+          "$RUNNER_TEMP/ziroctl" plugin validate modules/*/manifest.json examples/*/manifest.json scripts/tailscale/manifest.template.json
           scripts/check-artifacts.sh
+      - name: Test the Tailscale bump script
+        run: scripts/tailscale/test-bump.sh
       - name: Build catalog
         run: |
           "$RUNNER_TEMP/ziroctl" catalog build . --repo ziro --kind module --out public
