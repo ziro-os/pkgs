@@ -33,7 +33,8 @@ jobs:
       - name: Read the pinned ziroctl ref
         if: steps.bump.outputs.version != ''
         id: ref
-        run: echo "ref=$(sed -n 's/^ *ZIROCTL_REF: *//p' .github/workflows/catalog.yml)" >>"$GITHUB_OUTPUT"
+        run: |
+          echo "ref=$(sed -n 's/^ *ZIROCTL_REF: *//p' .github/workflows/catalog.yml)" >>"$GITHUB_OUTPUT"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         if: steps.bump.outputs.version != ''
         with:
