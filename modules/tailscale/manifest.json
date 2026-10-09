@@ -1,0 +1,95 @@
+{
+  "name": "tailscale",
+  "version": "1.104.1",
+  "description": "Tailscale: reach this host over your tailnet (runs unprivileged, nothing open by default; ziroctl tailscale up)",
+  "min_memory_mb": 512,
+  "settings": [
+    {
+      "name": "port",
+      "description": "UDP port tailscaled listens on (1024-65535)",
+      "default": "41642",
+      "pattern": "^[0-9]{4,5}$"
+    },
+    {
+      "name": "telemetry",
+      "description": "Let tailscaled upload logs to Tailscale (on or off)",
+      "default": "off",
+      "pattern": "^(on|off)$"
+    },
+    {
+      "name": "auto_update",
+      "description": "Upgrade daily to the newest pinned release (true or false)",
+      "default": "true",
+      "pattern": "^(true|false)$"
+    }
+  ],
+  "artifacts": [
+    {
+      "url": "https://github.com/ziro-os/pkgs/releases/download/tailscale-1.104.1/tailscaled-linux-amd64",
+      "sha256": "8b16e5cb5c480f58ae6325d036e7b7a2362e8df07fb9cfbf31d16e2b6c7df76c",
+      "path": "/var/lib/ziro/plugins/tailscale/tailscaled",
+      "mode": "0755",
+      "arch": "x86_64"
+    },
+    {
+      "url": "https://github.com/ziro-os/pkgs/releases/download/tailscale-1.104.1/tailscale-linux-amd64",
+      "sha256": "64aed443d6454865bdcabb40030b052c4b89cf9a4436c499d41afc502c0ec28d",
+      "path": "/var/lib/ziro/plugins/tailscale/tailscale",
+      "mode": "0755",
+      "arch": "x86_64"
+    },
+    {
+      "url": "https://github.com/ziro-os/pkgs/releases/download/tailscale-1.104.1/tailscaled-linux-arm64",
+      "sha256": "6367abc3ffd608ed64a762928444ee53ac4e99bf19baabb0321852d7f02b10b6",
+      "path": "/var/lib/ziro/plugins/tailscale/tailscaled",
+      "mode": "0755",
+      "arch": "aarch64"
+    },
+    {
+      "url": "https://github.com/ziro-os/pkgs/releases/download/tailscale-1.104.1/tailscale-linux-arm64",
+      "sha256": "6c2c134abad7cbbc8bc94a226b2972b4b7d5603daa0ca0bb9dc3b74a1dc15814",
+      "path": "/var/lib/ziro/plugins/tailscale/tailscale",
+      "mode": "0755",
+      "arch": "aarch64"
+    }
+  ],
+  "dirs": [
+    {
+      "path": "/var/lib/ziro/tailscale",
+      "mode": "0700"
+    },
+    {
+      "path": "/etc/ziro/tailscale",
+      "mode": "0700"
+    }
+  ],
+  "cron": [
+    "37 4 * * * /usr/bin/ziroctl tailscale update --cron"
+  ],
+  "post_start": [
+    {
+      "exec": "/usr/bin/ziroctl",
+      "args": [
+        "tailscale",
+        "setup"
+      ],
+      "timeout": "1m"
+    }
+  ],
+  "health": {
+    "exec": "/var/lib/ziro/plugins/tailscale/tailscaled",
+    "args": [
+      "--version"
+    ],
+    "timeout": "20s"
+  },
+  "stop": [
+    {
+      "exec": "/usr/bin/ziroctl",
+      "args": [
+        "tailscale",
+        "teardown"
+      ]
+    }
+  ]
+}
