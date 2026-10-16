@@ -1,6 +1,6 @@
 {
   "name": "cloudflared",
-  "version": "2026.10.0",
+  "version": "2026.10.1",
   "description": "Cloudflare Tunnel: publish services without a public IP, with optional Zero Trust Access (ziroctl cf)",
   "settings": [
     {
@@ -12,15 +12,15 @@
   ],
   "artifacts": [
     {
-      "url": "https://github.com/cloudflare/cloudflared/releases/download/2026.10.0/cloudflared-linux-amd64",
-      "sha256": "d33ff2d14475178d2012c2c56beba87389ac5ded27649519f198a7d3134a99db",
+      "url": "https://github.com/cloudflare/cloudflared/releases/download/2026.10.1/cloudflared-linux-amd64",
+      "sha256": "3bfc539f45d2620c71debb7a86be0efa737ed5ccbad9eb85c787116900e5c586",
       "path": "/var/lib/ziro/plugins/cloudflared/cloudflared",
       "mode": "0755",
       "arch": "x86_64"
     },
     {
-      "url": "https://github.com/cloudflare/cloudflared/releases/download/2026.10.0/cloudflared-linux-arm64",
-      "sha256": "e6422b9d4f72d3194bc5a38676f13667c06666523217b842a877d72a80b5ac08",
+      "url": "https://github.com/cloudflare/cloudflared/releases/download/2026.10.1/cloudflared-linux-arm64",
+      "sha256": "2c65dfabf616c40efc7545d107d7a57ad5e21377e2964b7e88af19a238074a46",
       "path": "/var/lib/ziro/plugins/cloudflared/cloudflared",
       "mode": "0755",
       "arch": "aarch64"
