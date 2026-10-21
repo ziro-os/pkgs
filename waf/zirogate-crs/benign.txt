@@ -1,0 +1,56 @@
+# Legitimate requests that no rule at level 1 or 2 may block. One target per line, optionally followed by a tab and a
+# User-Agent. Add a line here whenever a rule produced a false positive in production.
+/
+/index.html
+/search?q=how+to+select+the+best+option+from+a+list
+/search?q=union+station+timetable
+/?name=O%27Brien&city=St.+John%27s
+/?q=rock+%26+roll+and+fish+%26+chips
+/?comment=don%27t+do+it+or+else
+/products?id=42&sort=price&order=asc&page=3
+/api/v1/users/123/profile
+/orders/3f2b8c1e-9d4a-4e0b-8f3c-1a2b3c4d5e6f/items
+/?tags=a;b;c&x=1
+/login?next=https%3A%2F%2Fexample.com%2Fdash%3Ftab%3D1
+/?email=o%27neil%40example.com
+/docs/java.lang.String
+/?q=learn+javascript+basics
+/?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U
+/report?from=2024-01-01&to=2024-12-31
+/?q=2%2B2%3D4
+/?q=C%3A%5CUsers%5Calice%5Cdocs
+/download/app-1.2.3.tar.gz
+/vendor/lodash/index.js
+/static/js/app.7f3a9c.js
+/static/css/site.min.css
+/images/logo.png?w=200&h=100
+/blog/2026/10/how-docker-sockets-work
+/docs/secrets-management/guide
+/docs/using-curl-and-wget
+/help?topic=pipes+and+shell+scripts
+/price?item=widget&label=%24%7Bamount%7D
+/?q=data+science+jobs
+/?format=json&callback=handleResponse
+/shop/cart?coupon=SPRING2026
+/profile/edit?tab=initial-context
+/wiki/Table_info
+/backups/readme.txt
+/shopping/cart.php?item=3
+/api/search?q=mayor+1+of+3
+/?q=the+script+for+the+play
+/?redirect=/account/settings
+/robots.txt
+/sitemap.xml
+/healthz
+/api/v1/items?filter=name%3Dwidget&limit=50
+/?ref=newsletter&utm_source=email&utm_medium=cpc&utm_campaign=autumn
+/	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36
+/	Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15
+/	Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:126.0) Gecko/20100101 Firefox/126.0
+/	Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148
+/	curl/8.5.0
+/	Go-http-client/2.0
+/	python-requests/2.32.3
+/	Googlebot/2.1 (+http://www.google.com/bot.html)
+/	kube-probe/1.30
+/	Prometheus/2.53.0
