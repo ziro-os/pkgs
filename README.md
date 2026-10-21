@@ -32,6 +32,27 @@ hash, at install and again at every boot. The newest five releases are kept. `sc
 exercises the checks offline (a tampered checksum, an unstable release, a dynamic binary, the wrong architecture,
 a path-traversal archive, a downgrade) and runs on every pull request.
 
+## WAF rules
+
+[`waf/zirogate-crs`](waf/zirogate-crs/rules.json) is the rule set of the Ziro OS gateway's web application firewall.
+It is published as a second signed catalog at <https://ziro-os.github.io/pkgs/waf>, with the same key. A new rule
+reaches every gateway without a `ziroctl` release:
+
+```sh
+ziroctl gateway waf update            # fetch, verify and install the newest rules now
+ziroctl gateway waf status            # the rules in use, staged rules, rollback
+ziroctl gateway waf rollback          # return to the previous rules
+```
+
+Hosts also check about once a day (`ziroctl gateway settings set --waf-auto-update=false` stops that), and on a
+cluster master `waf update` makes every gateway node fetch the rules at once. Running gateways switch to new rules
+within a second, without a restart. A host that is offline keeps the rules it has, and a host that has never fetched
+a pack uses the rules built into `ziroctl`. See the [gateway guide](https://github.com/ziro-os/ziro-os/blob/main/docs/gateway.md#updating-the-rules).
+
+The rules are plain JSON that every host validates before use: sizes are capped, expressions are RE2 (linear time),
+and each rule carries samples it must and must not match. A pack that fails any check is not installed.
+[CONTRIBUTING.md](CONTRIBUTING.md#contributing-a-waf-rule) explains how to add a rule.
+
 ## Writing a plugin
 
 ```sh
