@@ -1,6 +1,6 @@
 {
   "name": "tailscale",
-  "version": "1.104.4",
+  "version": "1.104.5",
   "description": "Tailscale: reach this host over your tailnet (runs unprivileged, nothing open by default; ziroctl tailscale up)",
   "min_memory_mb": 512,
   "settings": [
@@ -25,29 +25,29 @@
   ],
   "artifacts": [
     {
-      "url": "https://github.com/ziro-os/pkgs/releases/download/tailscale-1.104.4/tailscaled-linux-amd64",
-      "sha256": "afc601d3c5be812105064eba11b64afa8928e983815bc47db218f25f3749c0c0",
+      "url": "https://github.com/ziro-os/pkgs/releases/download/tailscale-1.104.5/tailscaled-linux-amd64",
+      "sha256": "0dd3bfb1c8316cb6b6bb23d41d716a976313e8aa9387abc722e2a14782c06bbf",
       "path": "/var/lib/ziro/plugins/tailscale/tailscaled",
       "mode": "0755",
       "arch": "x86_64"
     },
     {
-      "url": "https://github.com/ziro-os/pkgs/releases/download/tailscale-1.104.4/tailscale-linux-amd64",
-      "sha256": "f27bd0ad0a9a04c23ae02aa8a5897cf7f99e4e5ae153c0e5f7000b122418c830",
+      "url": "https://github.com/ziro-os/pkgs/releases/download/tailscale-1.104.5/tailscale-linux-amd64",
+      "sha256": "ae6d013e3a9dac4d6ae7cd682cf89215e512d6f12ae94d39c72a93f13d2fce66",
       "path": "/var/lib/ziro/plugins/tailscale/tailscale",
       "mode": "0755",
       "arch": "x86_64"
     },
     {
-      "url": "https://github.com/ziro-os/pkgs/releases/download/tailscale-1.104.4/tailscaled-linux-arm64",
-      "sha256": "c8c80d2f0919eb48b0a86a9f1ddd2289d07ded51a886066db8059cd6461e5aa3",
+      "url": "https://github.com/ziro-os/pkgs/releases/download/tailscale-1.104.5/tailscaled-linux-arm64",
+      "sha256": "d1532cdbbe9c9a86275939b9130e837da8bb7223d2647996b7b1fabf48bc8359",
       "path": "/var/lib/ziro/plugins/tailscale/tailscaled",
       "mode": "0755",
       "arch": "aarch64"
     },
     {
-      "url": "https://github.com/ziro-os/pkgs/releases/download/tailscale-1.104.4/tailscale-linux-arm64",
-      "sha256": "01c657aa13af9a13789aa5f5fa70327c200d5387f2ac8cf245ec73e213b15217",
+      "url": "https://github.com/ziro-os/pkgs/releases/download/tailscale-1.104.5/tailscale-linux-arm64",
+      "sha256": "a000d3ee4734531da8e0b2874453e01c6f841e6fea9edae8621f4b2e4e45ab48",
       "path": "/var/lib/ziro/plugins/tailscale/tailscale",
       "mode": "0755",
       "arch": "aarch64"
